@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: true
+# Flat node_modules: the Orca typings set preserveSymlinks, which breaks transitive type lookups
+# (undici-types from @types/node) through pnpm symlinks.
+nodeLinker: hoisted

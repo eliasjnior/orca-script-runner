@@ -1,0 +1,9 @@
+scripts:
+  setup: |
+    pnpm install
+    pnpm types
+  test: pnpm test
+  check: |
+    pnpm lint
+    pnpm typecheck
+    pnpm check

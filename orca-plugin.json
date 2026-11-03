@@ -2,13 +2,25 @@
   "manifestVersion": 2,
   "id": "script-runner",
   "name": "Scripts",
-  "version": "1.0.0",
-  "description": "Run the scripts in a worktree's orca.yaml on demand, from a sidebar panel.",
+  "version": "1.1.0",
+  "description": "Run your worktree's orca.yaml scripts from the right sidebar.",
   "author": {
     "name": "Elias Júnior"
   },
   "repository": "https://github.com/eliasjnior/orca-plugins",
   "license": "MIT",
+  "icon": "assets/icon.png",
+  "cover": {
+    "path": "assets/cover.png",
+    "alt": "The Scripts panel in Orca's right sidebar, with a Run button for the setup, test and check scripts."
+  },
+  "screenshots": [
+    {
+      "path": "assets/screenshot-1.png",
+      "alt": "The Scripts panel listing a worktree's orca.yaml scripts, each with a Run button.",
+      "caption": "Every script under scripts: in orca.yaml, one Run away."
+    }
+  ],
   "engines": {
     "orca": ">=1.4.246"
   },

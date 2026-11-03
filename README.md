@@ -17,14 +17,18 @@ scripts:
 
 ## Install
 
+Add this repository's catalog to see every plugin in it: in Orca, open **Settings → Plugins → ⋯
+→ Catalog sources…**, add `https://github.com/eliasjnior/orca-plugins.git` with the ref `main`,
+then install this plugin from the list.
+
+Or install only this one, with the command or the link:
+
 | Plugin      | Command (macOS)                                                                                         | Install                                                                                   |
 | ----------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | **Scripts** | `open "orca://plugins/eliasjnior.script-runner?catalog=https://github.com/eliasjnior/orca-plugins.git"` | [Click here to install](https://eliasjnior.github.io/orca-plugins/install/script-runner/) |
 
-On Linux, replace `open` with `xdg-open`.
-
-Orca opens the plugin's page: review the access it asks for and press **Install**. Other ways to
-install are in the [repository README](../../README.md#install).
+On Linux, replace `open` with `xdg-open`. Other ways to install are in the
+[repository README](../../README.md#install).
 
 ## How it works
 

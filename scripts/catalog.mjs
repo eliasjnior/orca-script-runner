@@ -142,6 +142,9 @@ for (const dir of dirs) {
     ...(images ? { images } : {})
   }
   plugin.releases = [release, ...plugin.releases].slice(0, MAX_RELEASES)
+  // Orca reads catalog images from this repository's main branch, not from each release's commit,
+  // so only the newest release can vouch for the image files there now.
+  for (const older of plugin.releases.slice(1)) delete older.images
   changed = true
   console.log(`${id} ${entry.version}: added (commit ${entry.commit.slice(0, 7)})`)
 }

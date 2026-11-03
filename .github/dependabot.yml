@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    # A bundled package (yaml, Tiptap, Geist) also needs `pnpm vendor`; CI fails until it is run.
+    groups:
+      dependencies:
+        patterns: ["*"]

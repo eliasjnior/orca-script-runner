@@ -102,6 +102,10 @@ for (const dir of dirs) {
 
 if (changed) {
   await writeFile(CATALOG, `${JSON.stringify(catalog, null, 2)}\n`)
+  // Lay it out the way the repository's formatter does, so CI's lint accepts it.
+  execFileSync(join('node_modules', '.bin', 'biome'), ['format', '--write', CATALOG], {
+    stdio: 'ignore'
+  })
   execFileSync('orca', ['plugin', 'validate', CATALOG], { stdio: 'inherit' })
   console.log(`Updated ${CATALOG}: commit and push it to publish.`)
 } else {

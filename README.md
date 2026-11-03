@@ -17,17 +17,11 @@ scripts:
 
 ## Install
 
-macOS:
+| Plugin      | Command (macOS)                                                                                         | Install                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Scripts** | `open "orca://plugins/eliasjnior.script-runner?catalog=https://github.com/eliasjnior/orca-plugins.git"` | [Click here to install](https://eliasjnior.github.io/orca-plugins/install/script-runner/) |
 
-```sh
-open "orca://plugins/eliasjnior.script-runner?catalog=https://github.com/eliasjnior/orca-plugins.git"
-```
-
-Linux:
-
-```sh
-xdg-open "orca://plugins/eliasjnior.script-runner?catalog=https://github.com/eliasjnior/orca-plugins.git"
-```
+On Linux, replace `open` with `xdg-open`.
 
 Orca opens the plugin's page: review the access it asks for and press **Install**. Other ways to
 install are in the [repository README](../../README.md#install).

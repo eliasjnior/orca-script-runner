@@ -68,6 +68,7 @@ test('shows a failed run', async () => {
   const [setup] = view.findAll({ role: 'button', text: 'Run' })
   assert.ok(setup)
   await view.press(setup)
+  await view.press({ role: 'button', text: 'Run setup' })
   assert.ok(view.find({ text: /no longer defines/ }))
   await view.unmount()
 })
@@ -101,6 +102,7 @@ test('warns when the script could only start without a tab', async () => {
   const [setup] = view.findAll({ role: 'button', text: 'Run' })
   assert.ok(setup)
   await view.press(setup)
+  await view.press({ role: 'button', text: 'Run setup' })
   assert.ok(view.find({ label: '“setup” is running without a tab' }))
   assert.equal(view.find({ text: /Opened/ }), null)
   await view.unmount()
@@ -111,8 +113,8 @@ test('keeps the Run label while a script starts, disables every Run and shows a 
   const dev = { name: 'dev', command: 'pnpm dev' }
   const cards = (busy: string | null) => () => (
     <>
-      <panel.ScriptCard script={setup} workspaceId="wt-1" busy={busy} />
-      <panel.ScriptCard script={dev} workspaceId="wt-1" busy={busy} />
+      <panel.ScriptCard script={setup} workspaceId="wt-1" busy={busy} confirming={null} />
+      <panel.ScriptCard script={dev} workspaceId="wt-1" busy={busy} confirming={null} />
     </>
   )
 
@@ -129,4 +131,65 @@ test('keeps the Run label while a script starts, disables every Run and shows a 
   assert.equal(idle.find({ type: 'Spinner' }), null)
   assert.ok(idle.findAll({ role: 'button', text: 'Run' }).every((button) => !button.disabled))
   await idle.unmount()
+})
+
+test('asks before running setup or archive, and runs other scripts right away', async () => {
+  const runs: string[] = []
+  const host = mockHost({
+    requests: {
+      'scripts.list': {
+        ...listed,
+        scripts: [
+          { name: 'setup', command: 'pnpm install' },
+          { name: 'archive', command: 'docker compose down -v' },
+          { name: 'dev', command: 'pnpm dev' }
+        ]
+      },
+      'scripts.run': (input) => {
+        runs.push(input.name)
+        return { terminalId: 't1', title: input.name, visible: true }
+      }
+    }
+  })
+  const view = await mount(panel, { host })
+  await view.emit('workspace.changed', { context })
+  const run = () => view.findAll({ role: 'button', text: 'Run' })
+
+  // setup: the first press only asks.
+  await view.press(run()[0] as NonNullable<ReturnType<typeof view.find>>)
+  assert.deepEqual(runs, [])
+  assert.ok(view.find({ text: /Orca runs this when it creates a worktree/ }))
+  assert.equal(run()[0]?.disabled, true)
+
+  // Cancel closes it without running anything.
+  await view.press({ role: 'button', text: 'Cancel' })
+  assert.equal(view.find({ role: 'button', text: 'Run setup' }), null)
+  assert.deepEqual(runs, [])
+
+  // archive: confirming runs it once and closes the question.
+  await view.press(run()[1] as NonNullable<ReturnType<typeof view.find>>)
+  assert.ok(view.find({ text: /before it removes a worktree/ }))
+  await view.press({ role: 'button', text: 'Run archive' })
+  assert.deepEqual(runs, ['archive'])
+  assert.equal(view.find({ role: 'button', text: 'Run archive' }), null)
+
+  // Any other script runs on the first press.
+  await view.press(run()[2] as NonNullable<ReturnType<typeof view.find>>)
+  assert.deepEqual(runs, ['archive', 'dev'])
+  assert.deepEqual(view.errors, [])
+  assert.deepEqual(view.warnings, [])
+  await view.unmount()
+})
+
+test('drops a pending confirmation when the focused workspace changes', async () => {
+  const host = mockHost({ requests: { 'scripts.list': listed } })
+  const view = await mount(panel, { host })
+  await view.emit('workspace.changed', { context })
+  const [setup] = view.findAll({ role: 'button', text: 'Run' })
+  assert.ok(setup)
+  await view.press(setup)
+  assert.ok(view.find({ role: 'button', text: 'Run setup' }))
+  await view.emit('workspace.changed', { context: { ...context, branch: 'other' } })
+  assert.equal(view.find({ role: 'button', text: 'Run setup' }), null)
+  await view.unmount()
 })

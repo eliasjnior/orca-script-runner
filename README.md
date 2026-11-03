@@ -37,6 +37,10 @@ install are in the [repository README](../../README.md#install).
 - **Scripts** panel in the right sidebar: one card per script with a **Run** button. It follows the
   focused worktree and re-reads `orca.yaml` on every focus change; the refresh button re-reads it
   on demand.
+- **setup** and **archive** are Orca's own lifecycle scripts and can reinstall or remove things, so
+  their Run asks first: the card shows what the script is for, with **Run setup** (or **Run
+  archive**) and **Cancel**. Orca's panels have no dialogs, so the question opens in the card.
+  Every other script runs on the first press.
 - Orca closes a panel when another sidebar tab opens. The last list of each worktree is kept, so
   coming back shows it at once while the worker re-reads `orca.yaml`.
 - It reads the worktree's own `orca.yaml`, or the primary checkout's when the worktree has none.

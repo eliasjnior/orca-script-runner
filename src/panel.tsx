@@ -36,6 +36,19 @@ const starting = atom<string | null>(null)
 const lastRun = atom<{ name: string; title: string; at: number; visible: boolean } | null>(null)
 /** Why the last list or run request failed. */
 const failure = atom<string | null>(null)
+/** The script whose Run waits for a confirmation, if any. */
+const confirming = atom<string | null>(null)
+
+/**
+ * Orca's own lifecycle scripts, which can reinstall or remove things: Run asks first, with why.
+ * Every other script runs on the first press.
+ */
+export const CONFIRMED_SCRIPTS: Readonly<Record<string, string>> = {
+  setup:
+    'Orca runs this when it creates a worktree. Running it again can reinstall dependencies or overwrite files.',
+  archive:
+    'Orca runs this before it removes a worktree. It can delete files, data or services this worktree uses.'
+}
 const message = (error: unknown): string => (error instanceof Error ? error.message : String(error))
 
 async function refresh(): Promise<void> {
@@ -48,6 +61,7 @@ async function refresh(): Promise<void> {
 }
 
 async function runScript(workspaceId: string, name: string): Promise<void> {
+  set(confirming, null)
   set(starting, name)
   set(failure, null)
   try {
@@ -71,23 +85,39 @@ export function setup(ctx: PanelContext): void {
   ctx.subscriptions.push(
     on('workspace.changed', () => {
       set(lastRun, null)
+      set(confirming, null)
       void refresh()
     })
   )
 }
 
-/** One script: its name and Run. `busy` names the script that is starting, if any. */
+/** Run asks to confirm a lifecycle script once, and runs anything else right away. */
+function pressRun(workspaceId: string, name: string): void {
+  if (Object.hasOwn(CONFIRMED_SCRIPTS, name)) {
+    set(confirming, name)
+    return
+  }
+  void runScript(workspaceId, name)
+}
+
+/**
+ * One script: its name and Run. `busy` names the script that is starting, and `confirming` the
+ * one waiting for a confirmation, if any.
+ */
 export function ScriptCard({
   script,
   workspaceId,
-  busy
+  busy,
+  confirming: pending
 }: {
   script: Script
   workspaceId: string
   busy: string | null
+  confirming: string | null
 }) {
+  const asking = pending === script.name
   return (
-    <Box border radius="md" padding="sm">
+    <Box border radius="md" padding="sm" direction="column" gap="sm">
       <Row justify="between" align="center" gap="xs">
         <Text weight="semibold" truncate>
           {script.name}
@@ -102,13 +132,35 @@ export function ScriptCard({
             size="sm"
             icon="play"
             tooltip={`Run "${script.name}" in a new terminal`}
-            disabled={busy !== null}
-            onPress={() => runScript(workspaceId, script.name)}
+            disabled={busy !== null || asking}
+            onPress={() => pressRun(workspaceId, script.name)}
           >
             Run
           </Button>
         </Row>
       </Row>
+      {/* Orca's panels have no dialogs, so the confirmation opens inside the card. */}
+      {asking ? (
+        <Callout tone="warning" icon="warning" title={`Run "${script.name}"?`}>
+          <Stack gap="sm">
+            <Text>{CONFIRMED_SCRIPTS[script.name]}</Text>
+            <Row gap="xs">
+              <Button
+                size="sm"
+                tone="danger"
+                icon="play"
+                disabled={busy !== null}
+                onPress={() => runScript(workspaceId, script.name)}
+              >
+                {`Run ${script.name}`}
+              </Button>
+              <Button size="sm" variant="ghost" onPress={() => set(confirming, null)}>
+                Cancel
+              </Button>
+            </Row>
+          </Stack>
+        </Callout>
+      ) : null}
     </Box>
   )
 }
@@ -151,6 +203,7 @@ function Body({ view }: { view: ScriptsView }) {
             script={script}
             workspaceId={workspace.id}
             busy={read(starting)}
+            confirming={read(confirming)}
           />
         ))
       )}

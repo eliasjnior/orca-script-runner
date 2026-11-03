@@ -2,7 +2,7 @@
   "manifestVersion": 2,
   "id": "script-runner",
   "name": "Scripts",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Run the scripts in a worktree's orca.yaml on demand, from a sidebar panel.",
   "author": {
     "name": "Elias Júnior"

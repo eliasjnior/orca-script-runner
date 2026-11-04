@@ -9,6 +9,7 @@
   "scripts": {
     "types": "node scripts/orca-types.mjs",
     "vendor": "node scripts/vendor.mjs",
+    "binaries": "node scripts/check-binaries.mjs",
     "typecheck": "node scripts/each-plugin.mjs typecheck",
     "test": "node scripts/each-plugin.mjs test",
     "validate": "node scripts/each-plugin.mjs validate",

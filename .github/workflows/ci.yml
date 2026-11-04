@@ -30,6 +30,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      # Orca's directory refuses tags whose plugins bundle binaries other than images.
+      - run: pnpm binaries
       # No Orca on CI: the typings come from the Orca repository at config.orcaVersion.
       - run: pnpm types
       - run: pnpm typecheck

@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // Bundles the npm packages plugins use into single ESM files they import relatively. Orca plugins
 // ship without node_modules and their frames load no bare imports, so these bundles are committed.
-import { copyFile, mkdir, readFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
+import { readFile } from 'node:fs/promises'
 import { build } from 'esbuild'
 
 const BUNDLES = [
@@ -35,21 +34,6 @@ async function describe(name) {
     await readFile(`node_modules/${name}/package.json`, 'utf8')
   )
   return `${name} ${version} (${license})`
-}
-
-/** Files copied as they are, such as fonts (frames can load the plugin's own files only). */
-const COPIES = [
-  {
-    from: 'node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2',
-    to: 'plugins/worktree-notes/vendor/fonts/Geist-Variable.woff2'
-  },
-  { from: 'node_modules/geist/LICENSE.txt', to: 'plugins/worktree-notes/vendor/fonts/LICENSE.txt' }
-]
-
-for (const { from, to } of COPIES) {
-  await mkdir(dirname(to), { recursive: true })
-  await copyFile(from, to)
-  console.log(`copied ${to}`)
 }
 
 for (const bundle of BUNDLES) {

@@ -173,9 +173,9 @@ tagline and anything else that must be read inside that band.
 
 ## History
 
-This plugin was developed in [eliasjnior/orca-plugins](https://github.com/eliasjnior/orca-plugins)
-up to version 1.1.2; this repository keeps its history, and pull request numbers in older commit
-messages refer to that repository.
+Up to version 1.1.2 this plugin lived in `eliasjnior/orca-plugins`, a repository with other Orca
+plugins that has since been deleted. This repository keeps that history; pull request numbers in
+older commit messages (`eliasjnior/orca-plugins#N`) refer to it and no longer resolve.
 
 ## License
 

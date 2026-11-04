@@ -1,12 +1,11 @@
 #!/usr/bin/env node
-// Writes the Orca plugin typings into every plugin's `.orca/types`, the way
+// Writes the Orca plugin typings into the plugin's `.orca/types`, the way
 // `orca plugin types` does. Some Orca builds ship without the typings file that command reads
 // (1.4.247 fails with ENOENT), so on failure this downloads the same files from the Orca
 // repository at the tag matching the installed CLI and writes the same layout.
 import { execFileSync } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { pluginDirs } from './plugins.mjs'
 
 const RAW = 'https://raw.githubusercontent.com/stablyai/orca'
 const pkg = JSON.parse(await readFile('package.json', 'utf8'))
@@ -92,17 +91,11 @@ async function writeTypings(dir, typings) {
   )
 }
 
-let typings
-for (const dir of await pluginDirs()) {
-  if (viaCli(dir)) {
-    console.log(`${dir}: typings from orca plugin types`)
-    continue
-  }
-  if (!typings) {
-    const tag = `v${orcaVersion()}`
-    console.log(`orca plugin types failed; downloading the ${tag} typings from GitHub`)
-    typings = await fetchTypings(tag)
-  }
-  await writeTypings(dir, typings)
-  console.log(`${dir}: typings written`)
+if (viaCli('.')) {
+  console.log('typings from orca plugin types')
+} else {
+  const tag = `v${orcaVersion()}`
+  console.log(`orca plugin types failed; downloading the ${tag} typings from GitHub`)
+  await writeTypings('.', await fetchTypings(tag))
+  console.log('typings written to .orca/types')
 }

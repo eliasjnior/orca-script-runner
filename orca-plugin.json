@@ -2,12 +2,12 @@
   "manifestVersion": 2,
   "id": "script-runner",
   "name": "Scripts",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Run your worktree's orca.yaml scripts from the right sidebar.",
   "author": {
     "name": "Elias Júnior"
   },
-  "repository": "https://github.com/eliasjnior/orca-plugins",
+  "repository": "https://github.com/eliasjnior/orca-script-runner",
   "license": "MIT",
   "icon": "assets/icon.png",
   "cover": {

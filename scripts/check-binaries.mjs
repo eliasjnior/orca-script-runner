@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-// Fails when a tracked file under plugins/ is binary or a symlink. Orca's plugin directory refuses
-// to list a tagged commit that bundles them (executables, native modules, archives, bytecode, fonts,
-// symlinks); PNG, JPEG, WEBP and GIF images are allowed.
+// Fails when a tracked file is binary or a symlink. The repository root is the plugin, so Orca
+// installs every tracked file, and its plugin directory refuses to list a tagged commit that bundles
+// them (executables, native modules, archives, bytecode, fonts, symlinks); PNG, JPEG, WEBP and GIF
+// images are allowed.
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
 const IMAGE = /\.(png|jpe?g|webp|gif)$/i
-const entries = execFileSync('git', ['ls-files', '-s', '-z', 'plugins'], { encoding: 'utf8' })
+const entries = execFileSync('git', ['ls-files', '-s', '-z'], { encoding: 'utf8' })
   .split('\0')
   .filter(Boolean)
   .map((line) => {
@@ -21,7 +22,7 @@ for (const { mode, path } of entries) {
 }
 
 if (bad.length > 0) {
-  console.error(`Orca's directory rejects binary files in plugins:\n  ${bad.join('\n  ')}`)
+  console.error(`Orca's directory rejects binary files in a plugin:\n  ${bad.join('\n  ')}`)
   process.exit(1)
 }
-console.log(`no binary files in ${entries.length} plugin files`)
+console.log(`no binary files in ${entries.length} tracked files`)

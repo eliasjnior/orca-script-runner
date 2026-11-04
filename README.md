@@ -21,21 +21,30 @@ scripts:
 
 Needs Orca 1.4.246 or newer with plugins turned on (Settings → Plugins → **Turn on plugins**).
 
-[Open Scripts in Orca](https://onorca.dev/plugins/eliasjnior.script-runner?catalog=community), or run on
-macOS (`xdg-open` on Linux):
+### From Orca's plugin directory (recommended)
+
+Open [Scripts in Orca's plugin directory](https://www.onorca.dev/plugins/eliasjnior/orca-script-runner) and
+press **Open in Orca**. The page also shows the version on offer, what the plugin can access and
+the install steps when Orca is not installed yet.
+
+Orca then shows the plugin's page, where you press **Install**. The plugin comes from Orca's
+community catalog, which Orca asks to add the first time. It runs a Node worker, so Orca also needs
+**full-access plugins** allowed in Settings → Plugins, and shows what the plugin can access before
+it starts.
+
+Plugins installed this way update by themselves while **Update plugins automatically** is on
+(Orca's default). Orca asks again only when a version needs more access than you approved.
+
+### Or open it in Orca directly
+
+[Open Scripts in Orca](https://onorca.dev/plugins/eliasjnior.script-runner?catalog=community), or run on macOS
+(`xdg-open` on Linux):
 
 ```sh
 open "orca://plugins/eliasjnior.script-runner?catalog=community"
 ```
 
-Both open the plugin's page in Orca, where you press **Install**. The plugin comes from Orca's
-community catalog, which Orca asks to add the first time. It runs a Node worker, so Orca also needs
-**full-access plugins** allowed in Settings → Plugins, and shows what the plugin can access before
-it starts. Its listing in [Orca's plugin directory](https://onorca.dev/plugins/eliasjnior/orca-script-runner)
-says which version is offered.
-
-Plugins installed this way update by themselves while **Update plugins automatically** is on
-(Orca's default). Orca asks again only when a version needs more access than you approved.
+Both skip the directory page and open the same page in Orca.
 
 ### Or run it from a clone
 

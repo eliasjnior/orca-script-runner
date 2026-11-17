@@ -1,0 +1,113 @@
+name: Release
+
+# Run by hand (Actions → Release → Run workflow). It raises the version, merges a release pull
+# request into main, tags the merge commit and publishes a GitHub release with that version's
+# changelog section. Orca's plugin directory lists the new tag on its own.
+#
+# When main already has a version with no tag (a release pull request merged by hand, or a run
+# that stopped after merging), it tags and publishes that version and ignores `bump`.
+#
+# main only takes squash-merged pull requests that pass CI. A pull request opened with
+# GITHUB_TOKEN does not start other workflows, except through workflow_dispatch, so this starts CI
+# on the release branch itself. Needs "Allow GitHub Actions to create and approve pull requests"
+# in Settings → Actions → General.
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Part of the version to raise
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: write # the release branch, the tag and the GitHub release
+  pull-requests: write # the release pull request
+  actions: write # starting CI on the release branch
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          # Every tag, to find which versions are released.
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Plan the version
+        id: plan
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: node scripts/release.mjs plan "$BUMP" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Merge a release pull request
+        id: merge
+        if: steps.plan.outputs.mode == 'bump'
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          branch="release/v$VERSION"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git commit -am "chore(release): $VERSION"
+          git push origin "$branch"
+
+          {
+            node scripts/release.mjs notes "$VERSION"
+            printf '\n---\n\nOpened by [the Release workflow](%s).\n' "$RUN_URL"
+          } > "$RUNNER_TEMP/body.md"
+          gh pr create --base main --head "$branch" --title "chore(release): $VERSION" \
+            --body-file "$RUNNER_TEMP/body.md"
+
+          gh workflow run ci.yml --ref "$branch"
+          for _ in $(seq 30); do
+            run=$(gh run list --workflow ci.yml --branch "$branch" --event workflow_dispatch \
+              --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+            [ -n "$run" ] && break
+            sleep 5
+          done
+          if [ -z "$run" ]; then
+            echo "::error::CI did not start on $branch"
+            exit 1
+          fi
+          if ! gh run watch "$run" --exit-status --interval 15; then
+            echo "::error::CI failed on $branch; fix it there, merge the pull request, then run Release again to tag it"
+            exit 1
+          fi
+
+          number=$(gh pr view "$branch" --json number --jq .number)
+          gh pr merge "$branch" --squash --subject "chore(release): $VERSION (#$number)" --body ''
+          sha=$(gh pr view "$branch" --json mergeCommit --jq .mergeCommit.oid)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Tag and publish
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+          MERGED: ${{ steps.merge.outputs.sha }}
+        run: |
+          # A bump tags its merge commit; a publish tags the main commit it planned from.
+          sha="${MERGED:-$(git rev-parse HEAD)}"
+          git fetch origin main
+          git switch --detach "$sha"
+          node scripts/release.mjs notes "$VERSION" > "$RUNNER_TEMP/notes.md"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "v$VERSION" -m "v$VERSION" "$sha"
+          git push origin "v$VERSION"
+          gh release create "v$VERSION" --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md" \
+            --verify-tag

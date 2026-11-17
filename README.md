@@ -136,13 +136,21 @@ The repository root is the plugin, so Orca installs every tracked file in it. Or
 directory lists the newest `vX.Y.Z` tag, pinned to its commit and file hash, and a listed version
 never changes. `main` only takes pull requests, squash-merged.
 
-1. Raise `version` in `orca-plugin.json`, open a pull request and merge it.
-2. Tag the merged `main` commit with that version and push the tag:
+1. Each pull request with a notable change adds it under `## [Unreleased]` in `CHANGELOG.md`.
+2. To release, run the **Release** workflow (Actions → Release → Run workflow, or
+   `gh workflow run release.yml -f bump=minor`) and pick `patch`, `minor` or `major`. It raises
+   `version` in `orca-plugin.json`, turns the Unreleased entries into the new version's section,
+   merges that as a `chore(release)` pull request once CI passes, tags the merge commit `vX.Y.Z` and
+   publishes a GitHub release with the section as its notes. It refuses to run when Unreleased is
+   empty.
 
-   ```sh
-   git switch main && git pull
-   git tag -a v1.2.0 -m v1.2.0 && git push origin v1.2.0
-   ```
+If a run stops after merging, or a release pull request was merged by hand, run Release again: when
+`main` holds a version with no tag yet, it tags and publishes that version and ignores `bump`.
+`node scripts/release.mjs plan <bump>` and `notes <X.Y.Z>` are the steps the workflow runs, for
+doing it by hand.
+
+The workflow opens its pull request with `GITHUB_TOKEN`, so the repository needs **Allow GitHub
+Actions to create and approve pull requests** (Settings → Actions → General).
 
 The directory checks tags about every 30 minutes. A new version can wait for a maintainer's review
 before it is listed; [the plugin's status page](https://onorca.dev/plugins/eliasjnior/orca-script-runner)
